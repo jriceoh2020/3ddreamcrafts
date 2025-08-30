@@ -1,0 +1,20 @@
+# 3DDreamCrafts Cron Jobs Configuration
+# Add these entries to the system crontab using: sudo crontab -e
+
+# Daily database backup at 2:00 AM
+0 2 * * * /var/www/html/scripts/backup_database.sh
+
+# Health check every 15 minutes
+*/15 * * * * /var/www/html/scripts/health_check.sh >/dev/null 2>&1
+
+# Weekly log rotation (Sundays at 3:00 AM)
+0 3 * * 0 find /var/log/3ddreamcrafts/ -name "*.log" -mtime +7 -delete
+
+# Monthly cleanup of old cache files (1st of month at 4:00 AM)
+0 4 1 * * find /var/www/html/cache/ -name "*.cache" -mtime +30 -delete
+
+# SSL certificate renewal check (Let's Encrypt, twice daily)
+0 0,12 * * * /usr/bin/certbot renew --quiet
+
+# System updates check (weekly, Sundays at 5:00 AM)
+0 5 * * 0 apt update && apt list --upgradable | mail -s "Available Updates" root@localhost

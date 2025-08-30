@@ -1,0 +1,28 @@
+{
+    "created_at": "2025-08-17 10:16:31",
+    "name": "pre_restore_2025-08-17_10-16-31",
+    "description": "Manual backup: pre_restore_2025-08-17_10-16-31",
+    "settings": [
+        {
+            "setting_name": "theme_color",
+            "setting_value": "#10b981",
+            "updated_at": "2025-08-17 10:16:31"
+        },
+        {
+            "setting_name": "accent_color",
+            "setting_value": "#f97316",
+            "updated_at": "2025-08-17 10:16:31"
+        },
+        {
+            "setting_name": "font_family",
+            "setting_value": "Helvetica, Arial, sans-serif",
+            "updated_at": "2025-08-17 10:16:31"
+        },
+        {
+            "setting_name": "site_title",
+            "setting_value": "3DDreamCrafts",
+            "updated_at": "2025-08-17 10:16:03"
+        }
+    ],
+    "version": "1.0"
+}

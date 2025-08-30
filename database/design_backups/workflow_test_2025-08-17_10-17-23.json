@@ -1,0 +1,28 @@
+{
+    "created_at": "2025-08-17 10:17:23",
+    "name": "workflow_test",
+    "description": "Manual backup: workflow_test",
+    "settings": [
+        {
+            "setting_name": "theme_color",
+            "setting_value": "#8b5cf6",
+            "updated_at": "2025-08-17 10:17:23"
+        },
+        {
+            "setting_name": "accent_color",
+            "setting_value": "#f59e0b",
+            "updated_at": "2025-08-17 10:17:23"
+        },
+        {
+            "setting_name": "font_family",
+            "setting_value": "Georgia, serif",
+            "updated_at": "2025-08-17 10:17:23"
+        },
+        {
+            "setting_name": "site_title",
+            "setting_value": "3DDreamCrafts",
+            "updated_at": "2025-08-17 10:16:31"
+        }
+    ],
+    "version": "1.0"
+}
