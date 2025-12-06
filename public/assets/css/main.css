@@ -2,11 +2,11 @@
 
 /* CSS Custom Properties (will be overridden by dynamic.php) */
 :root {
-    --theme-color: #2563eb;
+    --theme-color: #2596be;
     --accent-color: #dc2626;
     --font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    --theme-color-light: #3b82f6;
-    --theme-color-dark: #1d4ed8;
+    --theme-color-light: #3bb5d9;
+    --theme-color-dark: #1e7a9f;
     --accent-color-light: #ef4444;
     --accent-color-dark: #b91c1c;
     --text-on-theme: #ffffff;

@@ -120,7 +120,7 @@ class ConfigManager {
     private function loadDefaultSettings() {
         $this->settings = [
             'site_title' => SITE_NAME,
-            'theme_color' => '#2563eb',
+            'theme_color' => '#2596be',
             'accent_color' => '#dc2626',
             'font_family' => 'Arial, sans-serif',
             'items_per_page' => ITEMS_PER_PAGE,

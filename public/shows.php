@@ -23,6 +23,7 @@ $instagramUrl = $config->get('instagram_url', '#');
 $siteTitle = $settings['site_title'];
 $themeColor = $settings['theme_color'];
 $accentColor = $settings['accent_color'];
+$siteLogo = $config->get('site_logo', '');
 ?>
 <!DOCTYPE html>
 <html lang="en">

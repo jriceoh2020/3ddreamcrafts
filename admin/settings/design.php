@@ -9,6 +9,7 @@ require_once __DIR__ . '/../../includes/auth.php';
 require_once __DIR__ . '/../../includes/content.php';
 require_once __DIR__ . '/../../includes/functions.php';
 require_once __DIR__ . '/../../includes/design-backup.php';
+require_once __DIR__ . '/../../includes/upload.php';
 
 $auth = AuthManager::getInstance();
 $auth->requireAuth();
@@ -31,13 +32,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             case 'update_settings':
                 // Create automatic backup before updating
                 $backupManager->createBackup();
-                
+
                 $settings = [
                     'theme_color' => validateHexColor($_POST['theme_color'] ?? ''),
                     'accent_color' => validateHexColor($_POST['accent_color'] ?? ''),
                     'font_family' => validateTextInput($_POST['font_family'] ?? '', 1, 100, true)
                 ];
-                
+
+                // Handle logo upload if provided
+                if (isset($_FILES['site_logo']) && $_FILES['site_logo']['error'] === UPLOAD_ERR_OK) {
+                    $uploadManager = new FileUploadManager();
+                    $uploadResult = $uploadManager->uploadFile($_FILES['site_logo'], 'logo');
+
+                    if ($uploadResult['success']) {
+                        $settings['site_logo'] = '/' . $uploadResult['path'];
+                    } else {
+                        $errors[] = 'Logo upload failed: ' . $uploadResult['error'];
+                    }
+                } elseif (isset($_POST['remove_logo']) && $_POST['remove_logo'] === '1') {
+                    // Remove logo if requested
+                    $settings['site_logo'] = '';
+                }
+
                 // Validate required fields
                 $errors = [];
                 if ($settings['theme_color'] === null) {
@@ -49,7 +65,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if ($settings['font_family'] === null) {
                     $errors[] = 'Font family is required.';
                 }
-                
+
                 if (empty($errors)) {
                     $result = $adminManager->updateSettings($settings);
                     if ($result) {
@@ -459,10 +475,37 @@ $csrfToken = generateCSRFToken();
         
         <div class="card">
             <h2>Design Customization</h2>
-            
-            <form method="POST" action="">
+
+            <form method="POST" action="" enctype="multipart/form-data">
                 <input type="hidden" name="csrf_token" value="<?php echo $csrfToken; ?>">
                 
+                <!-- Logo Upload -->
+                <div class="settings-section">
+                    <h3>Site Logo</h3>
+
+                    <?php if (!empty($currentSettings['site_logo'])): ?>
+                        <div class="form-group">
+                            <label>Current Logo</label>
+                            <div style="margin-bottom: 1rem;">
+                                <img src="<?php echo htmlspecialchars($currentSettings['site_logo']); ?>"
+                                     alt="Site Logo"
+                                     style="max-height: 100px; border: 1px solid #ddd; border-radius: 4px; padding: 0.5rem; background: white;">
+                            </div>
+                            <label style="display: flex; align-items: center; gap: 0.5rem; font-weight: normal;">
+                                <input type="checkbox" name="remove_logo" value="1">
+                                Remove current logo
+                            </label>
+                        </div>
+                    <?php endif; ?>
+
+                    <div class="form-group">
+                        <label for="site_logo">Upload New Logo</label>
+                        <input type="file" id="site_logo" name="site_logo"
+                               accept="image/jpeg,image/png,image/gif,image/webp">
+                        <div class="form-help">Upload a logo image (JPG, PNG, GIF, or WebP). Recommended size: 200x100 pixels or similar aspect ratio.</div>
+                    </div>
+                </div>
+
                 <!-- Colors -->
                 <div class="settings-section">
                     <h3>Colors</h3>

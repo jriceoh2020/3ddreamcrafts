@@ -27,6 +27,7 @@ $instagramUrl = $config->get('instagram_url', '#');
 $siteTitle = $settings['site_title'];
 $themeColor = $settings['theme_color'];
 $accentColor = $settings['accent_color'];
+$siteLogo = $config->get('site_logo', '');
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -101,14 +102,37 @@ $accentColor = $settings['accent_color'];
             text-align: center;
             padding: 4rem 2rem;
         }
-        
+
+        .hero-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .hero-logo {
+            max-height: 120px;
+            max-width: 200px;
+            height: auto;
+            width: auto;
+            object-fit: contain;
+        }
+
+        .hero-text {
+            flex: 1;
+            min-width: 300px;
+        }
+
         .hero h1 {
             font-size: 3rem;
             margin-bottom: 1rem;
             text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
             color: #FFFFFF; /* Gold color - change this to your preferred color */
         }
-        
+
         .hero p {
             font-size: 1.2rem;
             opacity: 0.9;
@@ -318,7 +342,16 @@ $accentColor = $settings['accent_color'];
             .hero h1 {
                 font-size: 2rem;
             }
-            
+
+            .hero-content {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .hero-logo {
+                max-height: 80px;
+            }
+
             .nav-container {
                 flex-direction: column;
                 gap: 1rem;
@@ -346,7 +379,11 @@ $accentColor = $settings['accent_color'];
             .hero {
                 padding: 2rem 1rem;
             }
-            
+
+            .hero-logo {
+                max-height: 60px;
+            }
+
             .hero h1 {
                 font-size: 1.8rem;
             }
@@ -393,8 +430,17 @@ $accentColor = $settings['accent_color'];
 
     <!-- Hero Section -->
     <section class="hero">
-        <h1>Welcome to <?php echo htmlspecialchars($siteTitle); ?></h1>
-        <p>Custom 3D printed crafts and creations. Discover unique items and visit us at local shows and festivals.</p>
+        <div class="hero-content">
+            <?php if (!empty($siteLogo)): ?>
+                <img src="<?php echo htmlspecialchars($siteLogo); ?>"
+                     alt="<?php echo htmlspecialchars($siteTitle); ?> Logo"
+                     class="hero-logo">
+            <?php endif; ?>
+            <div class="hero-text">
+                <h1>Welcome to <?php echo htmlspecialchars($siteTitle); ?></h1>
+                <p>Custom 3D printed crafts and creations. Discover unique items and visit us at local shows and festivals.</p>
+            </div>
+        </div>
     </section>
 
     <!-- Social Media Section -->

@@ -33,7 +33,7 @@ try {
 } catch (Exception $e) {
     // Fallback to default settings if database is not available
     $settings = [
-        'theme_color' => '#2563eb',
+        'theme_color' => '#2596be',
         'accent_color' => '#dc2626',
         'font_family' => 'Arial, sans-serif'
     ];
