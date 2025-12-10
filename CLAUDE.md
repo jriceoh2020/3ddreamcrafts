@@ -21,15 +21,18 @@ public/              # Public web root - configure web server to serve from here
 ├── assets/          # CSS, JS, images
 └── uploads/         # User-uploaded content (must be writable)
 
-admin/               # Admin panel (protected by authentication)
+public/admin/        # Admin panel (protected by authentication)
 ├── index.php        # Admin dashboard
 ├── login.php        # Admin login
 ├── manage/          # Content management pages
 │   ├── featured-prints.php
 │   ├── news-articles.php
 │   ├── craft-shows.php
-│   └── uploads.php
+│   ├── uploads.php
+│   └── cache.php
 └── settings/        # Site configuration pages
+    ├── general.php
+    └── design.php
 
 includes/            # Core PHP classes and utilities
 ├── config.php       # ConfigManager class + application constants
@@ -100,16 +103,27 @@ php database/apply_optimizations.php
 
 Run test suites:
 ```bash
-# Individual test categories
-php tests/run_tests.php
-php tests/integration_test.php
-php tests/comprehensive_test_suite.php
-php tests/cross_browser_compatibility_test.php
-php tests/mobile_responsiveness_test.php
-php tests/automated_security_scan_test.php
+# Core functionality tests
+php tests/run_tests.php                          # Database, config, upload tests
+php tests/verify_database.php                    # Database connectivity & schema
 
-# Verify database functionality
-php tests/verify_database.php
+# Feature-specific tests
+php tests/run_content_tests.php                  # Content management tests
+php tests/run_news_tests.php                     # News system tests
+php tests/run_admin_tests.php                    # Admin dashboard tests
+php tests/run_design_tests.php                   # Design system tests
+php tests/run_security_tests.php                 # Security features tests
+php tests/run_performance_tests.php              # Performance monitoring tests
+
+# Integration and comprehensive tests
+php tests/integration_test.php                   # Full system integration
+php tests/comprehensive_test_suite.php           # Complete test coverage
+php tests/final_integration_test.php             # Final system validation
+
+# Specialized tests
+php tests/cross_browser_compatibility_test.php   # Browser compatibility
+php tests/mobile_responsiveness_test.php         # Mobile responsiveness
+php tests/automated_security_scan_test.php       # Security scanning
 ```
 
 ### Development Server
@@ -118,6 +132,25 @@ php tests/verify_database.php
 # Start PHP built-in server from public directory
 php -S localhost:8000 -t public/
 ```
+
+### Production Deployment (AWS EC2 Ubuntu)
+
+Automated deployment to Ubuntu server:
+```bash
+# Run the deployment script
+sudo ./deploy_to_ubuntu.sh your-domain-or-ip
+
+# See DEPLOYMENT_GUIDE.md for detailed instructions
+```
+
+The `deploy_to_ubuntu.sh` script automates:
+- Apache and PHP 8.1 installation
+- SQLite3 setup
+- Directory structure and permissions
+- Database initialization
+- Virtual host configuration
+- Firewall setup (UFW)
+- Automated maintenance tasks
 
 ## Architecture Patterns
 
@@ -129,15 +162,33 @@ $db = DatabaseManager::getInstance();
 $config = ConfigManager::getInstance();
 $auth = AuthManager::getInstance();
 $security = SecurityManager::getInstance();
+$cache = CacheManager::getInstance();
 ```
+
+### Content Management Class Hierarchy
+
+Content is handled through a two-tier class system in `includes/content.php`:
+1. **ContentManager**: Read-only public content retrieval (featured prints, news, craft shows)
+2. **AdminManager** (extends ContentManager): Full CRUD operations with validation and cache invalidation
+
+The AdminManager provides:
+- `createContent($table, $data)` - Create new content with automatic validation
+- `updateContent($table, $id, $data)` - Update existing content
+- `deleteContent($table, $id)` - Delete content
+- `getAllContent($table, $page, $perPage)` - Paginated content listing
+- Automatic cache invalidation on all modifications
+- Table-specific validation (validateFeaturedPrintData, validateCraftShowData, etc.)
 
 ### Database Access Layer
 
-All database operations go through `DatabaseManager`:
+All database operations go through `DatabaseManager` (includes/database.php):
 - `query($sql, $params)` - SELECT queries, returns array of rows
 - `queryOne($sql, $params)` - Single row SELECT, returns single array
-- `execute($sql, $params)` - INSERT/UPDATE/DELETE, returns last insert ID
+- `execute($sql, $params)` - INSERT/UPDATE/DELETE, returns last insert ID for INSERTs
+- `tableExists($tableName)` - Check if a table exists
+- `beginTransaction()` / `commit()` / `rollback()` - Transaction support
 - All queries use prepared statements (NEVER concatenate SQL)
+- SQLite-specific optimizations: WAL mode, NORMAL synchronous mode
 
 ### Configuration System
 
@@ -156,20 +207,36 @@ Multiple security mechanisms:
 
 ### Caching System
 
-Two-level caching:
+Two-level caching system in `includes/cache.php`:
 1. **CacheManager**: Generic file-based cache with TTL support
-2. **ContentCache**: Specialized cache for database content (featured prints, news, shows)
+   - `set($key, $data, $ttl)` - Store data with time-to-live
+   - `get($key)` - Retrieve cached data (returns null if expired)
+   - `remember($key, $callback, $ttl)` - Get from cache or execute callback
+   - `clear()` / `cleanExpired()` - Cache maintenance
+2. **ContentCache**: Specialized cache for database content
+   - Caches featured prints, news articles, craft shows
+   - Automatic TTL: 30 minutes for content, 1 hour for settings
+   - `invalidateContent($type)` - Invalidate specific content type caches
 
-Cache invalidation happens automatically on content updates in admin panel.
+Cache invalidation happens automatically on content updates in admin panel via AdminManager.
 
 ### Authentication Flow
 
-1. User submits login via `admin/login.php`
+Complete authentication flow in `includes/auth.php`:
+1. User submits login via `public/admin/login.php`
 2. `AuthManager::login($username, $password)` validates credentials
-3. Rate limiting checked via `SecurityManager::checkRateLimit()`
-4. On success: session created, security log entry, redirect to dashboard
-5. Session timeout: SESSION_TIMEOUT (default 3600 seconds)
-6. Session regeneration: Every SESSION_REGENERATE_INTERVAL (300 seconds)
+3. Rate limiting checked via `SecurityManager::isRateLimited()`
+4. Password verification with timing attack prevention (dummy hash for non-existent users)
+5. Suspicious activity detection (rapid requests, multiple usernames from same IP)
+6. On success:
+   - Session created with `session_regenerate_id()`
+   - CSRF token generated
+   - Login attempt recorded via `SecurityManager::recordLoginAttempt()`
+   - Security event logged
+7. Session management:
+   - Timeout: SESSION_TIMEOUT (default 3600 seconds)
+   - Auto-regeneration: Every SESSION_REGENERATE_INTERVAL (300 seconds)
+   - Activity tracking for timeout detection
 
 ## Database Schema
 
@@ -211,10 +278,21 @@ When modifying code:
 
 ## Performance Considerations
 
-- **Database**: Uses SQLite WAL mode for better concurrency
-- **Caching**: Content is cached with configurable TTL; invalidates on updates
-- **Performance Monitoring**: `PerformanceMonitor` tracks page load times, queries, memory usage
-- **Optimization**: Run `database/apply_optimizations.php` to apply database indices and optimizations
+Performance monitoring and optimization in `includes/performance.php`:
+- **Database**: SQLite WAL mode for better concurrency, NORMAL synchronous mode
+- **Caching**: Content cached with configurable TTL; automatic invalidation on updates
+- **Performance Monitoring**: `PerformanceMonitor` singleton tracks:
+  - Page load times with threshold logging (default: >3s)
+  - Database query counts and execution times
+  - Memory usage (current, peak, delta from start)
+  - Per-URL performance statistics
+  - Logs to `logs/performance.log` when thresholds exceeded
+- **Image Optimization**: `ImageOptimizer` class provides:
+  - Automatic resizing (max width: 1200px)
+  - Quality adjustment (default: 85% for JPEG)
+  - WebP conversion support
+  - Lazy loading helper functions
+- **Database Optimization**: Run `php database/apply_optimizations.php` to apply indices
 
 ## File Permissions
 
@@ -255,15 +333,49 @@ All tests use a separate test database to avoid affecting production data.
 ## Content Management Workflow
 
 All content managed through admin panel:
-1. Login at `/admin/login.php`
-2. Dashboard at `/admin/index.php` shows content overview
+1. Login at `/public/admin/login.php`
+2. Dashboard at `/public/admin/index.php` shows content overview
 3. Content management:
-   - Featured Prints: `/admin/manage/featured-prints.php`
-   - News Articles: `/admin/manage/news-articles.php`
-   - Craft Shows: `/admin/manage/craft-shows.php`
-   - Uploads: `/admin/manage/uploads.php`
-4. Cache automatically invalidated on content updates
-5. Changes reflect immediately on public pages
+   - Featured Prints: `/public/admin/manage/featured-prints.php`
+   - News Articles: `/public/admin/manage/news-articles.php`
+   - Craft Shows: `/public/admin/manage/craft-shows.php`
+   - Uploads: `/public/admin/manage/uploads.php`
+   - Cache Management: `/public/admin/manage/cache.php`
+4. Settings:
+   - General Settings: `/public/admin/settings/general.php`
+   - Design Settings: `/public/admin/settings/design.php`
+5. CRUD operations flow through `AdminManager` class:
+   - All data validated with table-specific validation methods
+   - Cache automatically invalidated on content updates
+   - CSRF tokens validated on all state-changing operations
+6. Changes reflect immediately on public pages (cache invalidation ensures fresh data)
+
+## Input Validation and Sanitization
+
+Comprehensive validation functions in `includes/content.php` and `includes/security.php`:
+
+**Text and Data Validation:**
+- `validateTextInput($input, $minLength, $maxLength, $required)` - Sanitize and length-check text
+- `validateInteger($value, $min, $max)` - Validate numeric input with range checking
+- `validateEmail($email)` - Email format validation
+- `validateUrl($url)` - URL format validation
+- `validateHexColor($color)` - Hex color code validation (#RRGGBB)
+- `validateDateSecure($date, $format)` - Date validation with null byte removal
+
+**File Handling:**
+- `sanitizeFilename($filename)` - Remove path info and special characters
+- `validateFileUpload($file)` - Comprehensive file upload security checks (size, type, MIME)
+
+**Output Escaping (XSS Prevention):**
+- `escapeHtml($string)` - HTML context escaping
+- `escapeHtmlAttr($string)` - HTML attribute context
+- `escapeJs($string)` - JavaScript context with JSON encoding
+- `escapeUrl($string)` - URL encoding
+- `cleanHtmlContent($html, $allowedTags)` - Strip unwanted HTML tags, remove dangerous URLs
+
+**CSRF Protection:**
+- `generateCSRFToken()` - Create session-based CSRF token
+- `validateCSRFToken($token)` - Validate token with timing-safe comparison
 
 ## Design System Backups
 
