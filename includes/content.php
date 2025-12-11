@@ -698,9 +698,10 @@ class AdminManager extends ContentManager {
             'maintenance_mode',
             'schema_version',
             'facebook_url',
-            'instagram_url'
+            'instagram_url',
+            'site_logo'
         ];
-        
+
         return in_array($name, $allowedSettings);
     }
     

@@ -94,7 +94,16 @@ $siteLogo = $config->get('site_logo', '');
         .nav-menu a:hover {
             opacity: 0.8;
         }
-        
+
+        .header-logo {
+            max-height: 50px;
+            max-width: 150px;
+            height: auto;
+            width: auto;
+            object-fit: contain;
+            vertical-align: middle;
+        }
+
         /* Hero Section */
         .hero {
             background: linear-gradient(135deg, <?php echo $themeColor; ?> 0%, <?php echo $accentColor; ?> 100%);
@@ -352,6 +361,11 @@ $siteLogo = $config->get('site_logo', '');
                 max-height: 80px;
             }
 
+            .header-logo {
+                max-height: 40px;
+                max-width: 120px;
+            }
+
             .nav-container {
                 flex-direction: column;
                 gap: 1rem;
@@ -382,6 +396,11 @@ $siteLogo = $config->get('site_logo', '');
 
             .hero-logo {
                 max-height: 60px;
+            }
+
+            .header-logo {
+                max-height: 35px;
+                max-width: 100px;
             }
 
             .hero h1 {
@@ -417,7 +436,15 @@ $siteLogo = $config->get('site_logo', '');
     <!-- Header with Navigation -->
     <header class="header">
         <div class="nav-container">
-            <a href="/" class="logo"><?php echo htmlspecialchars($siteTitle); ?></a>
+            <a href="/" class="logo">
+                <?php if (!empty($siteLogo)): ?>
+                    <img src="<?php echo htmlspecialchars($siteLogo); ?>"
+                         alt="<?php echo htmlspecialchars($siteTitle); ?>"
+                         class="header-logo">
+                <?php else: ?>
+                    <?php echo htmlspecialchars($siteTitle); ?>
+                <?php endif; ?>
+            </a>
             <nav>
                 <ul class="nav-menu">
                     <li><a href="/">Home</a></li>

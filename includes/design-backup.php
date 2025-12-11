@@ -320,9 +320,10 @@ class DesignBackupManager {
             'theme_color',
             'accent_color',
             'font_family',
-            'site_title'
+            'site_title',
+            'site_logo'
         ];
-        
+
         $settings = [];
         foreach ($designSettings as $settingName) {
             $result = $this->db->queryOne(

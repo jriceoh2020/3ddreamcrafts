@@ -3,7 +3,8 @@
     "allow": [
       "Bash(sqlite3:*)",
       "Bash(php update_theme_color.php:*)",
-      "Bash(chmod:*)"
+      "Bash(chmod:*)",
+      "Bash(ls -la \"C:\\code\\3ddream\\3ddreamcrafts\\public\\assets\\images\"\" 2>&1 || echo \"Directory check completed \")"
     ],
     "deny": [],
     "ask": []

@@ -98,6 +98,88 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $messageType = 'error';
                 }
                 break;
+
+            case 'upload_logo':
+                require_once __DIR__ . '/../../../includes/upload.php';
+
+                // Validate file upload
+                if (!isset($_FILES['logo_file']) || $_FILES['logo_file']['error'] === UPLOAD_ERR_NO_FILE) {
+                    $message = 'Please select a logo file to upload.';
+                    $messageType = 'error';
+                    break;
+                }
+
+                $uploadManager = getUploadManager();
+
+                // Get current logo to delete after successful upload
+                $currentLogo = $config->get('site_logo', '');
+
+                // Upload new logo to 'logos' subfolder
+                $result = $uploadManager->uploadFile($_FILES['logo_file'], 'logos');
+
+                if ($result['success']) {
+                    // Build relative path for storage
+                    $logoPath = '/' . $result['path'];
+
+                    // Create automatic backup before updating
+                    $backupManager->createBackup();
+
+                    // Update site_logo setting
+                    $updateResult = $adminManager->updateSettings([
+                        'site_logo' => $logoPath
+                    ]);
+
+                    if ($updateResult) {
+                        // Delete old logo file if it exists
+                        if (!empty($currentLogo) && $currentLogo !== $logoPath) {
+                            $oldLogoPath = ltrim($currentLogo, '/');
+                            $uploadManager->deleteFile($oldLogoPath);
+                        }
+
+                        $message = 'Logo uploaded successfully!';
+                        $messageType = 'success';
+                    } else {
+                        // Clean up uploaded file if setting update failed
+                        $uploadManager->deleteFile($result['path']);
+                        $message = 'Failed to save logo setting. Please try again.';
+                        $messageType = 'error';
+                    }
+                } else {
+                    $message = 'Logo upload failed: ' . htmlspecialchars($result['error']);
+                    $messageType = 'error';
+                }
+                break;
+
+            case 'remove_logo':
+                $currentLogo = $config->get('site_logo', '');
+
+                if (!empty($currentLogo)) {
+                    // Create automatic backup before removing
+                    $backupManager->createBackup();
+
+                    // Remove logo setting
+                    $updateResult = $adminManager->updateSettings([
+                        'site_logo' => ''
+                    ]);
+
+                    if ($updateResult) {
+                        // Delete logo file
+                        require_once __DIR__ . '/../../../includes/upload.php';
+                        $uploadManager = getUploadManager();
+                        $logoPath = ltrim($currentLogo, '/');
+                        $uploadManager->deleteFile($logoPath);
+
+                        $message = 'Logo removed successfully!';
+                        $messageType = 'success';
+                    } else {
+                        $message = 'Failed to remove logo. Please try again.';
+                        $messageType = 'error';
+                    }
+                } else {
+                    $message = 'No logo to remove.';
+                    $messageType = 'error';
+                }
+                break;
         }
     }
 }
@@ -416,10 +498,47 @@ $csrfToken = generateCSRFToken();
                 align-items: stretch;
                 gap: 1rem;
             }
-            
+
             .backup-actions {
                 justify-content: center;
             }
+        }
+
+        .logo-preview-section {
+            margin-bottom: 1.5rem;
+        }
+
+        .logo-preview {
+            margin: 0.5rem 0;
+            padding: 1rem;
+            background: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            display: inline-block;
+        }
+
+        .logo-preview img {
+            display: block;
+        }
+
+        input[type="file"] {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px dashed #ddd;
+            border-radius: 4px;
+            background: #f9f9f9;
+            cursor: pointer;
+            transition: border-color 0.2s;
+        }
+
+        input[type="file"]:hover {
+            border-color: #667eea;
+        }
+
+        input[type="file"]:focus {
+            outline: none;
+            border-color: #667eea;
+            background: white;
         }
     </style>
 </head>
@@ -514,11 +633,63 @@ $csrfToken = generateCSRFToken();
                         <div class="form-help">Font family used throughout the website.</div>
                     </div>
                 </div>
-                
+
                 <div class="form-group">
                     <button type="submit" class="btn btn-primary">Save Design Settings</button>
                     <a href="/admin/" class="btn btn-secondary">Cancel</a>
                 </div>
+            </form>
+        </div>
+
+        <!-- Logo Management -->
+        <div class="card">
+            <h2>Site Logo</h2>
+
+            <?php
+            $currentLogo = $config->get('site_logo', '');
+            if (!empty($currentLogo)):
+            ?>
+                <div class="logo-preview-section">
+                    <label>Current Logo:</label>
+                    <div class="logo-preview">
+                        <img src="<?php echo htmlspecialchars($currentLogo); ?>"
+                             alt="Current Site Logo"
+                             style="max-height: 100px; max-width: 200px; border: 1px solid #ddd; border-radius: 4px; padding: 0.5rem; background: white;">
+                    </div>
+                    <form method="POST" action="" style="margin-top: 1rem;">
+                        <input type="hidden" name="csrf_token" value="<?php echo $csrfToken; ?>">
+                        <input type="hidden" name="action" value="remove_logo">
+                        <button type="submit" class="btn btn-danger btn-sm"
+                                onclick="return confirm('Are you sure you want to remove the current logo?')">
+                            Remove Logo
+                        </button>
+                    </form>
+                </div>
+                <hr style="margin: 1.5rem 0; border: none; border-top: 1px solid #eee;">
+            <?php endif; ?>
+
+            <form method="POST" action="" enctype="multipart/form-data">
+                <input type="hidden" name="csrf_token" value="<?php echo $csrfToken; ?>">
+                <input type="hidden" name="action" value="upload_logo">
+
+                <div class="form-group">
+                    <label for="logo_file">
+                        <?php echo !empty($currentLogo) ? 'Upload New Logo' : 'Upload Logo'; ?> *
+                    </label>
+                    <input type="file"
+                           id="logo_file"
+                           name="logo_file"
+                           accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
+                           required>
+                    <div class="form-help">
+                        Allowed formats: JPG, PNG, GIF, WEBP. Maximum size: 5MB.<br>
+                        Recommended: Transparent PNG, max 400px wide for best results.
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary">
+                    <?php echo !empty($currentLogo) ? 'Replace Logo' : 'Upload Logo'; ?>
+                </button>
             </form>
         </div>
         

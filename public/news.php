@@ -95,7 +95,16 @@ $siteLogo = $config->get('site_logo', '');
         .nav-menu a.active {
             text-decoration: underline;
         }
-        
+
+        .header-logo {
+            max-height: 50px;
+            max-width: 150px;
+            height: auto;
+            width: auto;
+            object-fit: contain;
+            vertical-align: middle;
+        }
+
         /* Page Header */
         .page-header {
             background: linear-gradient(135deg, <?php echo $themeColor; ?> 0%, <?php echo $accentColor; ?> 100%);
@@ -310,7 +319,12 @@ $siteLogo = $config->get('site_logo', '');
             .nav-menu {
                 gap: 1rem;
             }
-            
+
+            .header-logo {
+                max-height: 40px;
+                max-width: 120px;
+            }
+
             .container {
                 padding: 0 1rem;
             }
@@ -342,7 +356,12 @@ $siteLogo = $config->get('site_logo', '');
             .page-header h1 {
                 font-size: 1.8rem;
             }
-            
+
+            .header-logo {
+                max-height: 35px;
+                max-width: 100px;
+            }
+
             .news-article {
                 padding: 1rem;
             }
@@ -357,7 +376,15 @@ $siteLogo = $config->get('site_logo', '');
     <!-- Header with Navigation -->
     <header class="header">
         <div class="nav-container">
-            <a href="/" class="logo"><?php echo htmlspecialchars($siteTitle); ?></a>
+            <a href="/" class="logo">
+                <?php if (!empty($siteLogo)): ?>
+                    <img src="<?php echo htmlspecialchars($siteLogo); ?>"
+                         alt="<?php echo htmlspecialchars($siteTitle); ?>"
+                         class="header-logo">
+                <?php else: ?>
+                    <?php echo htmlspecialchars($siteTitle); ?>
+                <?php endif; ?>
+            </a>
             <nav>
                 <ul class="nav-menu">
                     <li><a href="/">Home</a></li>
