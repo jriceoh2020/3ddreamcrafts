@@ -82,27 +82,12 @@ fi
 # Create backup directory if it doesn't exist
 mkdir -p "$BACKUP_DIR"
 
-echo -e "${YELLOW}[1/7] Checking git repository status...${NC}"
+echo -e "${YELLOW}[1/6] Verifying source directory...${NC}"
 cd "$GIT_REPO_DIR"
-
-# Show current branch and latest commit
-CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
-LATEST_COMMIT=$(git log -1 --pretty=format:"%h - %s (%cr)")
-echo -e "  Branch: ${GREEN}$CURRENT_BRANCH${NC}"
-echo -e "  Latest commit: ${GREEN}$LATEST_COMMIT${NC}"
+echo -e "${GREEN}✓ Source directory verified${NC}"
 echo ""
 
-# Optional: Pull latest changes
-read -p "Pull latest changes from remote? (y/n) " -n 1 -r
-echo
-if [[ $REPLY =~ ^[Yy]$ ]]; then
-    echo -e "${YELLOW}Pulling latest changes...${NC}"
-    git pull
-    echo -e "${GREEN}✓ Git pull completed${NC}"
-    echo ""
-fi
-
-echo -e "${YELLOW}[2/7] Creating backup of current deployment...${NC}"
+echo -e "${YELLOW}[2/6] Creating backup of current deployment...${NC}"
 if [ -d "$WEB_ROOT" ]; then
     BACKUP_FILE="$BACKUP_DIR/deployment_backup_$TIMESTAMP.tar.gz"
     tar -czf "$BACKUP_FILE" -C "$WEB_ROOT" . 2>/dev/null || true
@@ -118,7 +103,7 @@ else
 fi
 echo ""
 
-echo -e "${YELLOW}[3/7] Copying files to web root...${NC}"
+echo -e "${YELLOW}[3/6] Copying files to web root...${NC}"
 
 # Copy public directory
 echo "  Copying public/ directory..."
@@ -152,7 +137,7 @@ rsync -av --delete \
 echo -e "${GREEN}✓ Files copied successfully${NC}"
 echo ""
 
-echo -e "${YELLOW}[4/7] Creating required directories...${NC}"
+echo -e "${YELLOW}[4/6] Creating required directories...${NC}"
 
 # Create necessary directories with proper permissions
 directories=(
@@ -176,7 +161,7 @@ done
 echo -e "${GREEN}✓ Directories verified${NC}"
 echo ""
 
-echo -e "${YELLOW}[5/7] Setting file permissions...${NC}"
+echo -e "${YELLOW}[5/6] Setting file permissions...${NC}"
 
 # Set ownership to www-data (Apache user)
 chown -R www-data:www-data "$WEB_ROOT"
@@ -210,7 +195,7 @@ done
 echo -e "${GREEN}✓ Permissions set${NC}"
 echo ""
 
-echo -e "${YELLOW}[6/7] Clearing cache...${NC}"
+echo -e "${YELLOW}[6/6] Clearing cache and restarting Apache...${NC}"
 
 # Clear file cache if it exists
 if [ -d "$WEB_ROOT/cache" ]; then
@@ -219,11 +204,9 @@ if [ -d "$WEB_ROOT/cache" ]; then
 else
     echo -e "${YELLOW}⚠ Cache directory not found${NC}"
 fi
-echo ""
-
-echo -e "${YELLOW}[7/7] Restarting Apache...${NC}"
 
 # Restart Apache
+echo -e "Restarting Apache..."
 if systemctl is-active --quiet apache2; then
     systemctl restart apache2
     echo -e "${GREEN}✓ Apache restarted${NC}"
@@ -258,15 +241,5 @@ echo "  3. Check logs if issues occur:"
 echo "     ${GREEN}tail -f $WEB_ROOT/logs/error.log${NC}"
 echo "     ${GREEN}tail -f /var/log/apache2/error.log${NC}"
 echo ""
-
-# Optional: Show files that were changed
-read -p "Show list of changed files? (y/n) " -n 1 -r
-echo
-if [[ $REPLY =~ ^[Yy]$ ]]; then
-    echo -e "${YELLOW}Files modified in last commit:${NC}"
-    cd "$GIT_REPO_DIR"
-    git diff --name-status HEAD~1 HEAD | head -20
-    echo ""
-fi
 
 echo -e "${GREEN}Deployment completed successfully!${NC}"
