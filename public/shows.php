@@ -118,8 +118,8 @@ $siteLogo = $config->get('site_logo', '');
         }
 
         .hero-logo {
-            max-height: 120px;
-            max-width: 200px;
+            max-height: 180px;
+            max-width: 300px;
             height: auto;
             width: auto;
             object-fit: contain;
@@ -289,7 +289,7 @@ $siteLogo = $config->get('site_logo', '');
             }
 
             .hero-logo {
-                max-height: 80px;
+                max-height: 120px;
             }
 
             .nav-container {
@@ -330,7 +330,7 @@ $siteLogo = $config->get('site_logo', '');
             }
 
             .hero-logo {
-                max-height: 60px;
+                max-height: 90px;
             }
 
             .shows-grid {
