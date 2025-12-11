@@ -16,9 +16,18 @@ BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
 # Configuration
-GIT_REPO_DIR="$HOME/3ddreamcrafts"
-WEB_ROOT="/var/www/3ddreamcrafts"
-BACKUP_DIR="$HOME/3ddreamcrafts_backups"
+# Get the actual user's home directory (not root's when using sudo)
+if [ -n "$SUDO_USER" ]; then
+    ACTUAL_USER="$SUDO_USER"
+    ACTUAL_HOME=$(eval echo ~$SUDO_USER)
+else
+    ACTUAL_USER="$USER"
+    ACTUAL_HOME="$HOME"
+fi
+
+GIT_REPO_DIR="${GIT_REPO_DIR:-$ACTUAL_HOME/3ddreamcrafts}"
+WEB_ROOT="${WEB_ROOT:-/var/www/3ddreamcrafts}"
+BACKUP_DIR="${BACKUP_DIR:-$ACTUAL_HOME/3ddreamcrafts_backups}"
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
 
 # Check if running as root or with sudo
@@ -30,13 +39,31 @@ fi
 
 echo -e "${BLUE}╔════════════════════════════════════════╗${NC}"
 echo -e "${BLUE}║  3DDreamCrafts Deployment Script      ║${NC}"
-echo -e "${BLUE}╔════════════════════════════════════════╗${NC}"
+echo -e "${BLUE}╚════════════════════════════════════════╝${NC}"
+echo ""
+echo -e "  Running as:  ${GREEN}$ACTUAL_USER${NC}"
+echo -e "  Git repo:    ${GREEN}$GIT_REPO_DIR${NC}"
+echo -e "  Web root:    ${GREEN}$WEB_ROOT${NC}"
 echo ""
 
 # Verify git repository exists
 if [ ! -d "$GIT_REPO_DIR" ]; then
     echo -e "${RED}ERROR: Git repository not found at $GIT_REPO_DIR${NC}"
-    exit 1
+    echo ""
+    echo "Please specify the correct path to your git repository:"
+    echo "  Option 1: Set GIT_REPO_DIR environment variable"
+    echo "    ${GREEN}sudo GIT_REPO_DIR=/path/to/repo ./scripts/deploy_changes.sh${NC}"
+    echo ""
+    echo "  Option 2: Edit the script and change GIT_REPO_DIR"
+    echo ""
+    read -p "Enter git repository path (or press Enter to exit): " CUSTOM_REPO
+    if [ -n "$CUSTOM_REPO" ] && [ -d "$CUSTOM_REPO" ]; then
+        GIT_REPO_DIR="$CUSTOM_REPO"
+        echo -e "${GREEN}✓ Using: $GIT_REPO_DIR${NC}"
+        echo ""
+    else
+        exit 1
+    fi
 fi
 
 # Verify web root exists

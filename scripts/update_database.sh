@@ -16,9 +16,18 @@ BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
 # Configuration
-WEB_ROOT="/var/www/3ddreamcrafts"
+# Get the actual user's home directory (not root's when using sudo)
+if [ -n "$SUDO_USER" ]; then
+    ACTUAL_USER="$SUDO_USER"
+    ACTUAL_HOME=$(eval echo ~$SUDO_USER)
+else
+    ACTUAL_USER="$USER"
+    ACTUAL_HOME="$HOME"
+fi
+
+WEB_ROOT="${WEB_ROOT:-/var/www/3ddreamcrafts}"
 DB_PATH="$WEB_ROOT/database/craftsite.db"
-BACKUP_DIR="$HOME/3ddreamcrafts_db_backups"
+BACKUP_DIR="${BACKUP_DIR:-$ACTUAL_HOME/3ddreamcrafts_db_backups}"
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
 
 # Check if running as root or with sudo
@@ -31,6 +40,10 @@ fi
 echo -e "${BLUE}╔════════════════════════════════════════╗${NC}"
 echo -e "${BLUE}║  3DDreamCrafts Database Update Script ║${NC}"
 echo -e "${BLUE}╚════════════════════════════════════════╝${NC}"
+echo ""
+echo -e "  Running as:  ${GREEN}$ACTUAL_USER${NC}"
+echo -e "  Web root:    ${GREEN}$WEB_ROOT${NC}"
+echo -e "  Database:    ${GREEN}$DB_PATH${NC}"
 echo ""
 
 # Create backup directory if it doesn't exist
