@@ -96,15 +96,6 @@ $siteLogo = $config->get('site_logo', '');
             padding-bottom: 2px;
         }
 
-        .header-logo {
-            max-height: 50px;
-            max-width: 150px;
-            height: auto;
-            width: auto;
-            object-fit: contain;
-            vertical-align: middle;
-        }
-
         /* Page Header */
         .page-header {
             background: linear-gradient(135deg, <?php echo $themeColor; ?> 0%, <?php echo $accentColor; ?> 100%);
@@ -112,7 +103,28 @@ $siteLogo = $config->get('site_logo', '');
             text-align: center;
             padding: 3rem 2rem;
         }
-        
+
+        .page-header-content {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .page-header-text {
+            flex: 1;
+        }
+
+        .hero-logo {
+            max-height: 120px;
+            max-width: 200px;
+            height: auto;
+            width: auto;
+            object-fit: contain;
+        }
+
         .page-header h1 {
             font-size: 2.5rem;
             margin-bottom: 1rem;
@@ -270,7 +282,16 @@ $siteLogo = $config->get('site_logo', '');
             .page-header h1 {
                 font-size: 2rem;
             }
-            
+
+            .page-header-content {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .hero-logo {
+                max-height: 80px;
+            }
+
             .nav-container {
                 flex-direction: column;
                 gap: 1rem;
@@ -278,11 +299,6 @@ $siteLogo = $config->get('site_logo', '');
             
             .nav-menu {
                 gap: 1rem;
-            }
-
-            .header-logo {
-                max-height: 40px;
-                max-width: 120px;
             }
 
             .shows-grid {
@@ -313,9 +329,8 @@ $siteLogo = $config->get('site_logo', '');
                 font-size: 1.8rem;
             }
 
-            .header-logo {
-                max-height: 35px;
-                max-width: 100px;
+            .hero-logo {
+                max-height: 60px;
             }
 
             .shows-grid {
@@ -333,15 +348,7 @@ $siteLogo = $config->get('site_logo', '');
     <!-- Header with Navigation -->
     <header class="header">
         <div class="nav-container">
-            <a href="/" class="logo">
-                <?php if (!empty($siteLogo)): ?>
-                    <img src="<?php echo htmlspecialchars($siteLogo); ?>"
-                         alt="<?php echo htmlspecialchars($siteTitle); ?>"
-                         class="header-logo">
-                <?php else: ?>
-                    <?php echo htmlspecialchars($siteTitle); ?>
-                <?php endif; ?>
-            </a>
+            <a href="/" class="logo"><?php echo htmlspecialchars($siteTitle); ?></a>
             <nav>
                 <ul class="nav-menu">
                     <li><a href="/">Home</a></li>
@@ -354,8 +361,17 @@ $siteLogo = $config->get('site_logo', '');
 
     <!-- Page Header -->
     <section class="page-header">
-        <h1>Upcoming Craft Shows</h1>
-        <p>Find us at these local events and see our latest 3D printed creations in person!</p>
+        <div class="page-header-content">
+            <?php if (!empty($siteLogo)): ?>
+                <img src="<?php echo htmlspecialchars($siteLogo); ?>"
+                     alt="<?php echo htmlspecialchars($siteTitle); ?> Logo"
+                     class="hero-logo">
+            <?php endif; ?>
+            <div class="page-header-text">
+                <h1>Upcoming Craft Shows</h1>
+                <p>Find us at these local events and see our latest 3D printed creations in person!</p>
+            </div>
+        </div>
     </section>
 
     <!-- Main Content -->
